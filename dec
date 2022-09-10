@@ -1,27 +1,41 @@
 #!/bin/bash
 if [[ $UID == 0 || $EUID == 0 ]]; then
     echo "Cannot be run as root"
-else
-    if [[ $(which paru 2>/dev/null) ]]; then
-        if [[ -n $PACKAGELIST ]]; then
-            PACKAGES=$PACKAGELIST
-        else
-            PACKAGES=$1
-        fi
-        if [[ -n $PACKAGES ]]; then
-            paru -Syu
-            INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | grep -Ev '^#') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed "s/^.//" | sed "s/.$//")
-            REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqe | sort -u) <(sort -u "$PACKAGES" | grep -Ev '^#'))
-            if [[ -n $INSTALL ]]; then
-                paru -S $INSTALL
-            fi
-            if [[ -n $REMOVE ]]; then
-                paru -Rns $REMOVE
-            fi
-        else
-            echo -e "No list of packages specified\nYou can specify one by setting PACKAGELIST or by passing the filename as an argument"
-        fi
-    else
-        echo "Paru is not installed"
-    fi
 fi
+
+if [[ $(which paru 2>/dev/null) ]]; then
+    echo "Paru is not installed"
+fi
+
+# CHANGE!!!
+if [[ -n $PACKAGELIST ]]; then
+    PACKAGES=$PACKAGELIST
+else
+    PACKAGES=$1
+fi
+
+if [[ -n $SERVICELIST ]]; then
+    SERVICES=$SERVICELIST
+else
+    SERVICES=$1
+fi
+
+if [[ -n $PACKAGES ]]; then
+    paru -Syu
+    INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | grep -Ev '^#') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed "s/^.//" | sed "s/.$//")
+    REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqe | sort -u) <(sort -u "$PACKAGES" | grep -Ev '^#'))
+    if [[ -n $INSTALL ]]; then
+        paru -S $INSTALL
+    fi
+    if [[ -n $REMOVE ]]; then
+        paru -Rns $REMOVE
+    fi
+else
+    echo -e "No list of packages specified\nYou can specify one by setting PACKAGELIST or by passing the filename as an argument"
+    exit 1
+fi
+
+sudo rm -rf "/etc/systemd/system"
+for LINE in $(<$SERVICES); do
+    sudo systemctl enable "$LINE"
+done
