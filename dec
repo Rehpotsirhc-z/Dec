@@ -3,36 +3,48 @@ if [[ $UID == 0 || $EUID == 0 ]]; then
     echo "Cannot be run as root"
 fi
 
-if [[ $(which paru 2>/dev/null) ]]; then
+if [[ ! $(which paru 2>/dev/null) ]]; then
     echo "Paru is not installed"
 fi
 
-# CHANGE!!!
-if [[ -n $PACKAGELIST ]]; then
-    PACKAGES=$PACKAGELIST
+while [ $# -gt 0 ]; do
+    if [[ $1 == *"--"* ]]; then
+        v="${1/--/}"
+        declare $v="$2"
+    fi
+    shift
+done
+
+if [[ -n $packagelist ]]; then
+    PACKAGES=$packagelist
 else
-    PACKAGES=$1
+    if [[ -n $PACKAGELIST ]]; then
+        PACKAGES=$PACKAGELIST
+    else
+        echo -e "No list of packages specified\nYou can specify one by using --packagelist or by setting PACKAGELIST"
+        exit 1
+    fi
 fi
 
-if [[ -n $SERVICELIST ]]; then
-    SERVICES=$SERVICELIST
+if [[ -n $servicelist ]]; then
+    SERVICES=$servicelist
 else
-    SERVICES=$1
+    if [[ -n $SERVICELIST ]]; then
+        SERVICES=$SERVICELIST
+    else
+        echo -e "No list of services specified\nYou can specify one by using --servicelist or by setting SERVICELIST"
+        exit 1
+    fi
 fi
 
-if [[ -n $PACKAGES ]]; then
-    paru -Syu
-    INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | grep -Ev '^#') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed "s/^.//" | sed "s/.$//")
-    REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqe | sort -u) <(sort -u "$PACKAGES" | grep -Ev '^#'))
-    if [[ -n $INSTALL ]]; then
-        paru -S $INSTALL
-    fi
-    if [[ -n $REMOVE ]]; then
-        paru -Rns $REMOVE
-    fi
-else
-    echo -e "No list of packages specified\nYou can specify one by setting PACKAGELIST or by passing the filename as an argument"
-    exit 1
+paru -Syu
+INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | grep -Ev '^#') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed "s/^.//" | sed "s/.$//")
+REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqe | sort -u) <(sort -u "$PACKAGES" | grep -Ev '^#'))
+if [[ -n $INSTALL ]]; then
+    paru -S $INSTALL
+fi
+if [[ -n $REMOVE ]]; then
+    paru -Rns $REMOVE
 fi
 
 sudo rm -rf "/etc/systemd/system"
