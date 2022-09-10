@@ -1,0 +1,9 @@
+#!/bin/bash
+scriptpath="$(dirname $(readlink -f $0))"
+
+if [ -f "$scriptpath/dec" ]; then
+    sudo cp "$scriptpath/dec" /usr/bin/dec
+    sudo chmod +x /usr/bin/dec
+else
+    echo "$scriptpath/dec does not exist"
+fi
