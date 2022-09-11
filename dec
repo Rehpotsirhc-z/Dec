@@ -47,7 +47,8 @@ if [[ -n $REMOVE ]]; then
     paru -Rns $REMOVE
 fi
 
-sudo rm -rf "/etc/systemd/system"
-for LINE in $(<$SERVICES); do
-    sudo systemctl enable "$LINE"
-done
+DISABLE=$(diff --new-line-format="" --unchanged-line-format="" <(systemctl list-unit-files --state=enabled | tail -n +2 | head -n -2 | awk '{print $1}' | sort -u) <(sort -u $SERVICES))
+if [[ -n $DISABLE ]]; then
+    sudo systemctl disable $(<$SERVICES)
+fi
+sudo systemctl enable $(<$SERVICES)
