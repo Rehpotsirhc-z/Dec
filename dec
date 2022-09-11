@@ -7,11 +7,31 @@ if [[ ! $(which paru 2>/dev/null) ]]; then
     echo "Paru is not installed"
 fi
 
+#while [ $# -gt 0 ]; do
+#    if [[ $1 == *"--"* ]]; then
+#        v="${1/--/}"
+#echo $v
+#        declare $v="$2"
+#echo $packagelist
+#    fi
+#    shift
+#done
+
 while [ $# -gt 0 ]; do
-    if [[ $1 == *"--"* ]]; then
-        v="${1/--/}"
-        declare $v="$2"
-    fi
+    case "$1" in
+    --packagelist=*)
+        argument="${1/--/}"
+        declare $argument
+        ;;
+    --servicelist=*)
+        argument="${1/--/}"
+        declare $argument
+        ;;
+    *)
+        echo "Invalid Argument"
+        exit 1
+        ;;
+    esac
     shift
 done
 
