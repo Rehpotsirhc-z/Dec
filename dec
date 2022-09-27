@@ -7,16 +7,6 @@ if [[ ! $(which paru 2>/dev/null) ]]; then
     echo "Paru is not installed"
 fi
 
-#while [ $# -gt 0 ]; do
-#    if [[ $1 == *"--"* ]]; then
-#        v="${1/--/}"
-#echo $v
-#        declare $v="$2"
-#echo $packagelist
-#    fi
-#    shift
-#done
-
 while [ $# -gt 0 ]; do
     case "$1" in
     --packagelist=*)
@@ -69,6 +59,6 @@ fi
 
 DISABLE=$(diff --new-line-format="" --unchanged-line-format="" <(systemctl list-unit-files --state=enabled | tail -n +2 | head -n -2 | awk '{print $1}' | sort -u) <(sort -u $SERVICES))
 if [[ -n $DISABLE ]]; then
-    sudo systemctl disable $(<$SERVICES)
+    sudo systemctl disable $DISABLE
 fi
 sudo systemctl enable $(<$SERVICES)
