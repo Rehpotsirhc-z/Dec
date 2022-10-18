@@ -13,10 +13,6 @@ while [ $# -gt 0 ]; do
         argument="${1/--/}"
         declare $argument
         ;;
-    --servicelist=*)
-        argument="${1/--/}"
-        declare $argument
-        ;;
     *)
         echo "Invalid Argument"
         exit 1
@@ -36,17 +32,6 @@ else
     fi
 fi
 
-if [[ -n $servicelist ]]; then
-    SERVICES=$servicelist
-else
-    if [[ -n $SERVICELIST ]]; then
-        SERVICES=$SERVICELIST
-    else
-        echo -e "No list of services specified\nYou can specify one by using --servicelist or by setting SERVICELIST"
-        exit 1
-    fi
-fi
-
 paru -Syu
 INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | grep -Ev '^#') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed "s/^.//" | sed "s/.$//")
 REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqe | sort -u) <(sort -u "$PACKAGES" | grep -Ev '^#'))
@@ -56,9 +41,3 @@ fi
 if [[ -n $REMOVE ]]; then
     paru -Rns $REMOVE
 fi
-
-DISABLE=$(diff --new-line-format="" --unchanged-line-format="" <(systemctl list-unit-files --state=enabled | tail -n +2 | head -n -2 | awk '{print $1}' | sort -u) <(sort -u $SERVICES))
-if [[ -n $DISABLE ]]; then
-    sudo systemctl disable $DISABLE
-fi
-sudo systemctl enable $(<$SERVICES)
