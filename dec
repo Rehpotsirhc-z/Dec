@@ -24,10 +24,10 @@ done
 if [[ -n $packagelist ]]; then
     PACKAGES=$packagelist
 else
-    if [[ -n $PACKAGELIST ]]; then
-        PACKAGES=$PACKAGELIST
+    if [[ -n $DEC_PACKAGELIST ]]; then
+        PACKAGES=$DEC_PACKAGELIST
     else
-        echo -e "No list of packages specified\nYou can specify one by using --packagelist or by setting PACKAGELIST"
+        echo -e "No list of packages specified\nYou can specify one by using --packagelist or by setting DEC_PACKAGELIST"
         exit 1
     fi
 fi
@@ -40,4 +40,5 @@ if [[ -n $INSTALL ]]; then
 fi
 if [[ -n $REMOVE ]]; then
     paru -Rns $REMOVE
+    echo $REMOVE
 fi
