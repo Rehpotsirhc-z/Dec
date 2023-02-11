@@ -5,7 +5,7 @@
 Dec is a functional package manager for Arch Linux and Arch Linux based operating systems.
 
 * Installation
-To install Dec, simply run =install.sh= by doing ~./install.sh~.
+To install Dec, simply run =install= by doing ~./install~.
 
 * Usage
 Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using =--packagelist=. Each line in the world file should contain the name of the package. Comments are made with =#=.
