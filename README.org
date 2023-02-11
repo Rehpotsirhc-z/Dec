@@ -10,5 +10,27 @@ To install Dec, simply run =install.sh= by doing ~./install.sh~.
 * Usage
 Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using =--packagelist=. Each line in the world file should contain the name of the package. Comments are made with =#=.
 
+** Example World File
+#+begin_src sh
+# Core
+linux
+linux-headers
+linux-firmware
+base
+base-devel
+
+# Browsers
+firefox
+qutebrowser
+
+# Editing Programs
+vim
+neovim
+emacs
+
+# Games
+0ad
+#+end_src
+
 * License
 GNU GPLv3
