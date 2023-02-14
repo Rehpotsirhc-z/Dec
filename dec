@@ -30,13 +30,12 @@ else
 fi
 
 paru -Syu
-INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | grep "^error" | awk '{print $3}' | sed -e "s/^.//" -e "s/.$//")
+INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | grep "^error" | awk '{ print $3 }' | sed -e "s/^.//" -e "s/.$//")
 REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d'))
 if [[ -n $INSTALL ]]; then
     paru -S --asexplicit $INSTALL
 fi
 if [[ -n $REMOVE ]]; then
-    #paru -Rns $REMOVE
     paru -D --asdeps $REMOVE
     paru --clean
 fi
