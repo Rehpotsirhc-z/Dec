@@ -6,14 +6,14 @@ fi
 
 while [ $# -gt 0 ]; do
     case "$1" in
-    --packagelist=*)
-        argument="${1/--/}"
-        declare $argument
-        ;;
-    *)
-        echo "Invalid Argument"
-        exit 1
-        ;;
+        --packagelist=*)
+            argument="${1/--/}"
+            declare $argument
+            ;;
+        *)
+            echo "Invalid Argument"
+            exit 1
+            ;;
     esac
     shift
 done
