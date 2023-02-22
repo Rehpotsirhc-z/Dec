@@ -1,8 +1,12 @@
 #!/bin/bash
 if [[ ! $(which paru 2>/dev/null) ]]; then
-    echo "Paru is not installed"
+    echo -e $RED"Paru is not installed"$RESET
     exit 1
 fi
+
+RED=$'\e[0;91m'
+RESET=$'\e[0;0m'
+GREEN=$'\e[0;32m'
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -11,7 +15,7 @@ while [ $# -gt 0 ]; do
             declare $argument
             ;;
         *)
-            echo "Invalid Argument"
+            echo -e $RED"Invalid Argument"$RESET
             exit 1
             ;;
     esac
@@ -24,7 +28,7 @@ else
     if [[ -n $DEC_PACKAGELIST ]]; then
         PACKAGES=$DEC_PACKAGELIST
     else
-        echo -e "No list of packages specified\nYou can specify one by using --packagelist or by setting DEC_PACKAGELIST"
+        echo -e $RED"No list of packages specified\nYou can specify one by using --packagelist or by setting DEC_PACKAGELIST"$RESET
         exit 1
     fi
 fi
@@ -33,9 +37,30 @@ paru -Syu
 INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | grep "^error" | awk '{ print $3 }' | sed -e "s/^.//" -e "s/.$//")
 REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d'))
 if [[ -n $INSTALL ]]; then
-    paru -S --asexplicit $INSTALL
+    echo -e $GREEN"The following packages will be installed: "$INSTALL$RESET
+
+    read -p $GREEN"Do you want to continue? [Y/n] "$RESET installresult
+    case "$installresult" in
+        Y | y | "")
+            paru -S --asexplicit --noconfirm $INSTALL
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
 fi
 if [[ -n $REMOVE ]]; then
-    paru -D --asdeps $REMOVE
-    paru --clean
+    echo -e $GREEN"The following packages will be removed: "$REMOVE$RESET
+
+    read -p $GREEN"Do you want to continue? [Y/n] "$RESET removeresult
+    case "$removeresult" in
+        Y | y | "")
+            paru -D --asdeps $REMOVE
+            paru --clean --noconfirm
+            ;;
+        *)
+            exit 1
+            ;;
+    esac
+
 fi
