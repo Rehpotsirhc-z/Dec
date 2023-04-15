@@ -4,7 +4,7 @@
 #+export_file_name: README
 #+auto_tangle: t
 
-* Table of Contents :toc:noexport:
+* Table of Contents :toc:
 - [[#introduction][Introduction]]
 - [[#installation][Installation]]
 - [[#dependencies][Dependencies]]

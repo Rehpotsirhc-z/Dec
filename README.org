@@ -1,9 +1,29 @@
-# Created 2023-04-15 Sat 14:41
+# Created 2023-04-15 Sat 14:47
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
 #+export_file_name: README
 #+auto_tangle: t
+
+* Table of Contents :toc:
+- [[#introduction][Introduction]]
+- [[#installation][Installation]]
+- [[#dependencies][Dependencies]]
+- [[#usage][Usage]]
+  - [[#example-world-file][Example World File]]
+- [[#license][License]]
+- [[#colors][Colors]]
+- [[#auxiliary-functions][Auxiliary Functions]]
+  - [[#printing-messages][Printing Messages]]
+  - [[#help-message][Help Message]]
+- [[#paru][Paru]]
+- [[#cli-arguments][CLI Arguments]]
+- [[#set-package-list][Set Package List]]
+- [[#managing-packages][Managing Packages]]
+  - [[#upgrade][Upgrade]]
+  - [[#install][Install]]
+  - [[#remove][Remove]]
+- [[#main][Main]]
 
 * Introduction
 Dec is a functional package manager for Arch Linux and its derivatives.
