@@ -1,9 +1,28 @@
-# Created 2023-04-15 Sat 14:41
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
 #+export_file_name: README
 #+auto_tangle: t
+
+* Table of Contents :toc:noexport:
+- [[#introduction][Introduction]]
+- [[#installation][Installation]]
+- [[#dependencies][Dependencies]]
+- [[#usage][Usage]]
+  - [[#example-world-file][Example World File]]
+- [[#license][License]]
+- [[#colors][Colors]]
+- [[#auxiliary-functions][Auxiliary Functions]]
+  - [[#printing-messages][Printing Messages]]
+  - [[#help-message][Help Message]]
+- [[#paru][Paru]]
+- [[#cli-arguments][CLI Arguments]]
+- [[#set-package-list][Set Package List]]
+- [[#managing-packages][Managing Packages]]
+  - [[#upgrade][Upgrade]]
+  - [[#install][Install]]
+  - [[#remove][Remove]]
+- [[#main][Main]]
 
 * Introduction
 Dec is a functional package manager for Arch Linux and its derivatives.
@@ -28,7 +47,7 @@ Dec mostly depends on common programs that are usually found on a system. Here i
 Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the world file should contain the name of the package. Comments are made with "#".
 
 ** Example World File
-#+begin_src sh
+#+begin_src sh :tangle no
 # Core
 linux
 linux-headers
@@ -139,7 +158,7 @@ while [[ $# -gt 0 ]]; do
         remove)
             REMOVE=true
             ;;
-        ,*)
+        *)
             print_message "Invalid Argument: $1" "$RED"
             exit 1
             ;;
@@ -182,7 +201,7 @@ upgrade() {
             Y | y | "")
                 paru -Syu --noconfirm
                 ;;
-            ,*)
+            *)
                 return 1
                 ;;
         esac
@@ -206,7 +225,7 @@ install() {
             Y | y | "")
                 paru -S --asexplicit --noconfirm $TOINSTALL
                 ;;
-            ,*)
+            *)
                 return 1
                 ;;
         esac
@@ -231,7 +250,7 @@ remove() {
                 paru -D --asdeps $TOREMOVE
                 paru --clean --noconfirm
                 ;;
-            ,*)
+            *)
                 return 1
                 ;;
         esac
@@ -267,3 +286,7 @@ if [[ ! "$UPGRADE" ]] && [[ ! "$INSTALL" ]] && [[ ! "$REMOVE" ]]; then
     remove
 fi
 #+end_src
+
+# Local Variables:
+# after-save-hook: (org-org-export-to-org)
+# End:
