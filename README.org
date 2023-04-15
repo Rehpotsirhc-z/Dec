@@ -23,7 +23,7 @@
 - [[#main][Main]]
 
 * Introduction
-Dec is a functional package manager for Arch Linux and Arch Linux based operating systems.
+Dec is a functional package manager for Arch Linux and its derivatives.
 
 * Installation
 To install Dec, simply run =install= by doing ~./install~.
