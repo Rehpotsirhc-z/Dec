@@ -1,5 +1,26 @@
 #+title: Dec
 #+author: Christopher
+#+property: header-args :tangle dec :shebang "#!/bin/bash"
+#+auto_tangle: t
+
+* Table of Contents :toc:noexport:
+- [[#introduction][Introduction]]
+- [[#installation][Installation]]
+- [[#usage][Usage]]
+  - [[#example-world-file][Example World File]]
+- [[#license][License]]
+- [[#colors][Colors]]
+- [[#auxiliary-functions][Auxiliary Functions]]
+  - [[#printing-messages][Printing Messages]]
+  - [[#help-message][Help Message]]
+- [[#paru][Paru]]
+- [[#cli-arguments][CLI Arguments]]
+- [[#set-package-list][Set Package List]]
+- [[#managing-packages][Managing Packages]]
+  - [[#upgrade][Upgrade]]
+  - [[#install][Install]]
+  - [[#remove][Remove]]
+- [[#main][Main]]
 
 * Introduction
 Dec is a functional package manager for Arch Linux and Arch Linux based operating systems.
@@ -8,10 +29,10 @@ Dec is a functional package manager for Arch Linux and Arch Linux based operatin
 To install Dec, simply run =install= by doing ~./install~.
 
 * Usage
-Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using =--packagelist=. Each line in the world file should contain the name of the package. Comments are made with =#=.
+Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the world file should contain the name of the package. Comments are made with "#".
 
 ** Example World File
-#+begin_src sh
+#+begin_src sh :tangle no
 # Core
 linux
 linux-headers
@@ -34,3 +55,219 @@ emacs
 
 * License
 GNU GPLv3
+
+* Colors
+This section sets some colors that will be used when printing messages.
+
+#+begin_src sh
+# SET COLORS
+RED="$(tput setaf 1)"
+GREEN="$(tput setaf 2)"
+YELLOW="$(tput setaf 3)"
+RESET="$(tput sgr0)"
+#+end_src
+
+* Auxiliary Functions
+** Printing Messages
+This function prints out text to the user. It takes in two arguments: the message to be printed and the color of the message. If no color is specified, it will print without color.
+
+#+begin_src sh
+# MAKE FUNCTION FOR PRINTING MESSAGES
+print_message() {
+    printf '%s%s%s\n' "$2" "$1" "$RESET"
+}
+#+end_src
+
+** Help Message
+This function prints out a help message.
+
+#+begin_src sh
+# MAKE FUNCTION FOR PRINTING HELP MESSAGE
+print_help() {
+    print_message "Usage: dec [OPTIONS]" "$GREEN"
+    print_message "Functional package manager for Arch Linux" "$GREEN"
+    print_message "" "$GREEN"
+    print_message "Options:" "$GREEN"
+    print_message "  --help                Show this help message" "$GREEN"
+    print_message "  --packagelist=FILE    Specify the package list" "$GREEN"
+    print_message "  upgrade               Upgrade packages" "$GREEN"
+    print_message "  install               Install packages" "$GREEN"
+    print_message "  remove                Remove packages" "$GREEN"
+    print_message "" "$GREEN"
+    print_message "Examples:" "$GREEN"
+    print_message "  dec upgrade" "$GREEN"
+    print_message "  dec --packagelist=packages.txt install" "$GREEN"
+    print_message "  dec remove --packagelist=packages.txt" "$GREEN"
+}
+#+end_src
+
+* Paru
+This checks if paru is installed on the system and exits the script with an error message if it is not found.
+
+#+begin_src sh
+# CHECK IF PARU IS INSTALLED
+if ! command -v paru &>/dev/null; then
+    print_message "Paru is not installed" "$RED"
+    exit 1
+fi
+#+end_src
+
+* CLI Arguments
+This parses the command line arguments. You can give Dec the following arguments:
+
+- ~--help~ or ~-h~ will print a help message and exit
+- ~--packagelist=~ will set the path to the list of packages
+- ~upgrade~ will upgrade the packages
+- ~install~ will install missing packages
+- ~remove~ will remove unnecessary packages
+
+You can run more than one operation by doing something like ~dec upgrade install~ or ~dec remove~. If neither ~upgrade~, ~install~, or ~remove~ are set, Dec will assume that you want to run all of them. If you do not want to pass in ~--packagelist=~, you can also set the =DEC_PACKAGELIST= environmental variable. However, the argument passed in has a higher precedent than the variable.
+
+#+begin_src sh
+# PARSE COMMAND LINE ARGUMENTS
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help | -h)
+            print_help
+            exit 0
+            ;;
+        --packagelist=*)
+            PACKAGES="${1#*=}"
+            ;;
+        upgrade)
+            UPGRADE=true
+            ;;
+        install)
+            INSTALL=true
+            ;;
+        remove)
+            REMOVE=true
+            ;;
+        *)
+            print_message "Invalid Argument: $1" "$RED"
+            exit 1
+            ;;
+    esac
+    shift
+done
+#+end_src
+
+* Set Package List
+This section handles the ~--packagelist=~ argument from the [[#cli-arguments][previous]] section. As mentioned before, Dec will first check for the path as an argument, and then it will look for the =DEC_PACKAGELIST= environmental variable if it is provided.
+
+#+begin_src sh
+# SET PACKAGE LIST IF NOT PROVIDED
+if [[ ! -v PACKAGES ]]; then
+    if [[ -v DEC_PACKAGELIST ]]; then
+        PACKAGES="$DEC_PACKAGELIST"
+    else
+        print_message "No list of packages specified" "$RED"
+        print_message "You can specify one by using --packagelist or by setting DEC_PACKAGELIST" "$RED"
+        exit 1
+    fi
+fi
+#+end_src
+
+* Managing Packages
+This section will create the functions that allow Dec to upgrade, install, and remove packages.
+
+** Upgrade
+This function will upgrade packages on the system. It checks for which packages can be upgraded and then prompts the user to upgrade them.
+
+#+begin_src sh
+# DEFINE FUNCTIONS FOR UPGRADING, INSTALLING, AND REMOVING PACKAGES
+upgrade() {
+    print_message "[[ Upgrading packages ]]" "$YELLOW"
+    TOUPGRADE="$(paru -Qqu | tr "\n" " ")"
+    if [[ -n "$TOUPGRADE" ]]; then
+        print_message "The following packages will be upgraded: $TOUPGRADE" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" upgraderesult
+        case "$upgraderesult" in
+            Y | y | "")
+                paru -Syu --noconfirm
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be upgraded" "$GREEN"
+    fi
+}
+#+end_src
+
+** Install
+This function will install packages specified in the package list. It first checks for what packages are missing and then prompts the user to install them.
+
+#+begin_src sh
+install() {
+    print_message "[[ Installing packages ]]" "$YELLOW"
+    TOINSTALL="$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | awk '/^error/ { print $3 }' | sed -e "s/^.//" -e "s/.$//" | tr "\n" " ")"
+    if [[ -n "$TOINSTALL" ]]; then
+        print_message "The following packages will be installed: $TOINSTALL" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" installresult
+        case "$installresult" in
+            Y | y | "")
+                paru -S --asexplicit --noconfirm $TOINSTALL
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be installed" "$GREEN"
+    fi
+}
+#+end_src
+
+** Remove
+This function will remove packages that are not specified in the package list. It first checks what packages are installed that are not specified in the list and then prompts the user to remove them.
+
+#+begin_src sh
+remove() {
+    print_message "[[ Removing packages ]]" "$YELLOW"
+    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
+    if [[ -n "$TOREMOVE" ]]; then
+        print_message "The following packages will be removed: $TOREMOVE" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" removeresult
+        case "$removeresult" in
+            Y | y | "")
+                paru -D --asdeps $TOREMOVE
+                paru --clean --noconfirm
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be removed" "$GREEN"
+    fi
+}
+#+end_src
+
+* Main
+This is the main part of the program where it handles how the arguments are dealt with. It first upgrades the system if it is specified. Then it installs missing packages if it is specified. Lastly, it will remove packages that are not in the package list if the user specifies. If no arguments are provided, it will run all of them.
+
+#+begin_src sh
+# UPGRADE PACKAGES IF SPECIFIED
+if [[ "$UPGRADE" ]]; then
+    upgrade
+fi
+
+# INSTALL PACKAGES IF SPECIFIED
+if [[ "$INSTALL" ]]; then
+    install
+fi
+
+# REMOVE PACKAGES IF SPECIFIED
+if [[ "$REMOVE" ]]; then
+    remove
+fi
+
+# UPGRADE, INSTALL, AND REMOVE PACKAES IF NO ACTION IS SPECIFIED
+if [[ ! "$UPGRADE" ]] && [[ ! "$INSTALL" ]] && [[ ! "$REMOVE" ]]; then
+    upgrade
+    install
+    remove
+fi
+#+end_src

@@ -1,66 +1,154 @@
 #!/bin/bash
-if [[ ! $(which paru 2>/dev/null) ]]; then
-    echo -e $RED"Paru is not installed"$RESET
+# SET COLORS
+RED="$(tput setaf 1)"
+GREEN="$(tput setaf 2)"
+YELLOW="$(tput setaf 3)"
+RESET="$(tput sgr0)"
+
+# MAKE FUNCTION FOR PRINTING MESSAGES
+print_message() {
+    printf '%s%s%s\n' "$2" "$1" "$RESET"
+}
+
+# MAKE FUNCTION FOR PRINTING HELP MESSAGE
+print_help() {
+    print_message "Usage: dec [OPTIONS]" "$GREEN"
+    print_message "Functional package manager for Arch Linux" "$GREEN"
+    print_message "" "$GREEN"
+    print_message "Options:" "$GREEN"
+    print_message "  --help                Show this help message" "$GREEN"
+    print_message "  --packagelist=FILE    Specify the package list" "$GREEN"
+    print_message "  upgrade               Upgrade packages" "$GREEN"
+    print_message "  install               Install packages" "$GREEN"
+    print_message "  remove                Remove packages" "$GREEN"
+    print_message "" "$GREEN"
+    print_message "Examples:" "$GREEN"
+    print_message "  dec upgrade" "$GREEN"
+    print_message "  dec --packagelist=packages.txt install" "$GREEN"
+    print_message "  dec remove --packagelist=packages.txt" "$GREEN"
+}
+
+# CHECK IF PARU IS INSTALLED
+if ! command -v paru &>/dev/null; then
+    print_message "Paru is not installed" "$RED"
     exit 1
 fi
 
-RED=$'\e[0;91m'
-RESET=$'\e[0;0m'
-GREEN=$'\e[0;32m'
-
-while [ $# -gt 0 ]; do
+# PARSE COMMAND LINE ARGUMENTS
+while [[ $# -gt 0 ]]; do
     case "$1" in
+        --help | -h)
+            print_help
+            exit 0
+            ;;
         --packagelist=*)
-            argument="${1/--/}"
-            declare $argument
+            PACKAGES="${1#*=}"
+            ;;
+        upgrade)
+            UPGRADE=true
+            ;;
+        install)
+            INSTALL=true
+            ;;
+        remove)
+            REMOVE=true
             ;;
         *)
-            echo -e $RED"Invalid Argument"$RESET
+            print_message "Invalid Argument: $1" "$RED"
             exit 1
             ;;
     esac
     shift
 done
 
-if [[ -n $packagelist ]]; then
-    PACKAGES=$packagelist
-else
-    if [[ -n $DEC_PACKAGELIST ]]; then
-        PACKAGES=$DEC_PACKAGELIST
+# SET PACKAGE LIST IF NOT PROVIDED
+if [[ ! -v PACKAGES ]]; then
+    if [[ -v DEC_PACKAGELIST ]]; then
+        PACKAGES="$DEC_PACKAGELIST"
     else
-        echo -e $RED"No list of packages specified\nYou can specify one by using --packagelist or by setting DEC_PACKAGELIST"$RESET
+        print_message "No list of packages specified" "$RED"
+        print_message "You can specify one by using --packagelist or by setting DEC_PACKAGELIST" "$RED"
         exit 1
     fi
 fi
 
-paru -Syu
-INSTALL=$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | grep "^error" | awk '{ print $3 }' | sed -e "s/^.//" -e "s/.$//")
-REMOVE=$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d'))
-if [[ -n $INSTALL ]]; then
-    echo -e $GREEN"The following packages will be installed: "$INSTALL$RESET
+# DEFINE FUNCTIONS FOR UPGRADING, INSTALLING, AND REMOVING PACKAGES
+upgrade() {
+    print_message "[[ Upgrading packages ]]" "$YELLOW"
+    TOUPGRADE="$(paru -Qqu | tr "\n" " ")"
+    if [[ -n "$TOUPGRADE" ]]; then
+        print_message "The following packages will be upgraded: $TOUPGRADE" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" upgraderesult
+        case "$upgraderesult" in
+            Y | y | "")
+                paru -Syu --noconfirm
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be upgraded" "$GREEN"
+    fi
+}
 
-    read -p $GREEN"Do you want to continue? [Y/n] "$RESET installresult
-    case "$installresult" in
-        Y | y | "")
-            paru -S --asexplicit --noconfirm $INSTALL
-            ;;
-        *)
-            exit 1
-            ;;
-    esac
+install() {
+    print_message "[[ Installing packages ]]" "$YELLOW"
+    TOINSTALL="$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | awk '/^error/ { print $3 }' | sed -e "s/^.//" -e "s/.$//" | tr "\n" " ")"
+    if [[ -n "$TOINSTALL" ]]; then
+        print_message "The following packages will be installed: $TOINSTALL" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" installresult
+        case "$installresult" in
+            Y | y | "")
+                paru -S --asexplicit --noconfirm $TOINSTALL
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be installed" "$GREEN"
+    fi
+}
+
+remove() {
+    print_message "[[ Removing packages ]]" "$YELLOW"
+    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
+    if [[ -n "$TOREMOVE" ]]; then
+        print_message "The following packages will be removed: $TOREMOVE" "$GREEN"
+        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" removeresult
+        case "$removeresult" in
+            Y | y | "")
+                paru -D --asdeps $TOREMOVE
+                paru --clean --noconfirm
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+    else
+        print_message "No packages need to be removed" "$GREEN"
+    fi
+}
+
+# UPGRADE PACKAGES IF SPECIFIED
+if [[ "$UPGRADE" ]]; then
+    upgrade
 fi
-if [[ -n $REMOVE ]]; then
-    echo -e $GREEN"The following packages will be removed: "$REMOVE$RESET
 
-    read -p $GREEN"Do you want to continue? [Y/n] "$RESET removeresult
-    case "$removeresult" in
-        Y | y | "")
-            paru -D --asdeps $REMOVE
-            paru --clean --noconfirm
-            ;;
-        *)
-            exit 1
-            ;;
-    esac
+# INSTALL PACKAGES IF SPECIFIED
+if [[ "$INSTALL" ]]; then
+    install
+fi
 
+# REMOVE PACKAGES IF SPECIFIED
+if [[ "$REMOVE" ]]; then
+    remove
+fi
+
+# UPGRADE, INSTALL, AND REMOVE PACKAES IF NO ACTION IS SPECIFIED
+if [[ ! "$UPGRADE" ]] && [[ ! "$INSTALL" ]] && [[ ! "$REMOVE" ]]; then
+    upgrade
+    install
+    remove
 fi
