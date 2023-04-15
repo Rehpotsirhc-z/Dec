@@ -98,20 +98,20 @@ This function prints out a help message.
 #+begin_src sh
 # MAKE FUNCTION FOR PRINTING HELP MESSAGE
 print_help() {
-    print_message "Usage: dec [OPTIONS]" "$GREEN"
-    print_message "Functional package manager for Arch Linux" "$GREEN"
-    print_message "" "$GREEN"
-    print_message "Options:" "$GREEN"
-    print_message "  --help                Show this help message" "$GREEN"
-    print_message "  --packagelist=FILE    Specify the package list" "$GREEN"
-    print_message "  upgrade               Upgrade packages" "$GREEN"
-    print_message "  install               Install packages" "$GREEN"
-    print_message "  remove                Remove packages" "$GREEN"
-    print_message "" "$GREEN"
-    print_message "Examples:" "$GREEN"
-    print_message "  dec upgrade" "$GREEN"
-    print_message "  dec --packagelist=packages.txt install" "$GREEN"
-    print_message "  dec remove --packagelist=packages.txt" "$GREEN"
+    print_message "Usage: dec [OPTIONS]"                                "$GREEN"
+    print_message "Functional package manager for Arch Linux"           "$GREEN"
+    print_message ""                                                    "$GREEN"
+    print_message "Options:"                                            "$GREEN"
+    print_message "  --help                Show this help message"      "$GREEN"
+    print_message "  --packagelist=FILE    Specify the package list"    "$GREEN"
+    print_message "  upgrade               Upgrade packages"            "$GREEN"
+    print_message "  install               Install packages"            "$GREEN"
+    print_message "  remove                Remove packages"             "$GREEN"
+    print_message ""                                                    "$GREEN"
+    print_message "Examples:"                                           "$GREEN"
+    print_message "  dec upgrade"                                       "$GREEN"
+    print_message "  dec --packagelist=packages.txt install"            "$GREEN"
+    print_message "  dec remove --packagelist=packages.txt"             "$GREEN"
 }
 #+end_src
 
