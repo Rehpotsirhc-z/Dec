@@ -1,4 +1,4 @@
-# Created 2023-04-15 Sat 14:47
+# Created 2023-04-20 Thu 20:16
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
@@ -193,6 +193,10 @@ This function will upgrade packages on the system. It checks for which packages 
 #+begin_src sh
 # DEFINE FUNCTIONS FOR UPGRADING, INSTALLING, AND REMOVING PACKAGES
 upgrade() {
+    print_message "[[ Updating package databases ]]" "$YELLOW"
+    paru -Sy &&
+        print_message "Package databases successfully updated" "$GREEN" ||
+            print_message "Failed to update package databases" "$RED"
     print_message "[[ Upgrading packages ]]" "$YELLOW"
     TOUPGRADE="$(paru -Qqu | tr "\n" " ")"
     if [[ -n "$TOUPGRADE" ]]; then

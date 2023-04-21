@@ -192,6 +192,10 @@ This function will upgrade packages on the system. It checks for which packages 
 #+begin_src sh
 # DEFINE FUNCTIONS FOR UPGRADING, INSTALLING, AND REMOVING PACKAGES
 upgrade() {
+    print_message "[[ Updating package databases ]]" "$YELLOW"
+    paru -Sy &&
+        print_message "Package databases successfully updated" "$GREEN" ||
+            print_message "Failed to update package databases" "$RED"
     print_message "[[ Upgrading packages ]]" "$YELLOW"
     TOUPGRADE="$(paru -Qqu | tr "\n" " ")"
     if [[ -n "$TOUPGRADE" ]]; then
@@ -288,5 +292,5 @@ fi
 #+end_src
 
 # Local Variables:
-# after-save-hook: (org-org-export-to-org)
+# eval: (add-to-list 'after-save-hook 'org-org-export-to-org)
 # End:
