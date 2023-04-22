@@ -3,6 +3,7 @@
 RED="$(tput setaf 1)"
 GREEN="$(tput setaf 2)"
 YELLOW="$(tput setaf 3)"
+BOLD="$(tput bold)"
 RESET="$(tput sgr0)"
 
 # MAKE FUNCTION FOR PRINTING MESSAGES
@@ -13,7 +14,7 @@ print_message() {
 # MAKE FUNCTION FOR PRINTING HELP MESSAGE
 print_help() {
     print_message "Usage: dec [OPTIONS]"                                "$GREEN"
-    print_message "Functional package manager for Arch Linux"           "$GREEN"
+    print_message "Declarative package manager for Arch Linux"           "$GREEN"
     print_message ""                                                    "$GREEN"
     print_message "Options:"                                            "$GREEN"
     print_message "  --help                Show this help message"      "$GREEN"
@@ -74,37 +75,20 @@ fi
 
 # DEFINE FUNCTIONS FOR UPGRADING, INSTALLING, AND REMOVING PACKAGES
 upgrade() {
-    print_message "[[ Updating package databases ]]" "$YELLOW"
-    paru -Sy &&
-        print_message "Package databases successfully updated" "$GREEN" ||
-            print_message "Failed to update package databases" "$RED"
-    print_message "[[ Upgrading packages ]]" "$YELLOW"
-    TOUPGRADE="$(paru -Qqu | tr "\n" " ")"
-    if [[ -n "$TOUPGRADE" ]]; then
-        print_message "The following packages will be upgraded: $TOUPGRADE" "$GREEN"
-        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" upgraderesult
-        case "$upgraderesult" in
-            Y | y | "")
-                paru -Syu --noconfirm
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-    else
-        print_message "No packages need to be upgraded" "$GREEN"
-    fi
+    print_message "[[ Upgrading packages ]]" "${YELLOW}${BOLD}"
+    print_message "* paru -Syu" "$GREEN"
+    paru -Syu
 }
 
 install() {
-    print_message "[[ Installing packages ]]" "$YELLOW"
+    print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
     TOINSTALL="$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | awk '/^error/ { print $3 }' | sed -e "s/^.//" -e "s/.$//" | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
-        print_message "The following packages will be installed: $TOINSTALL" "$GREEN"
-        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" installresult
+        print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
+        read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult
         case "$installresult" in
             Y | y | "")
-                paru -S --asexplicit --noconfirm $TOINSTALL
+                paru -S --asexplicit $TOINSTALL
                 ;;
             *)
                 return 1
@@ -116,15 +100,15 @@ install() {
 }
 
 remove() {
-    print_message "[[ Removing packages ]]" "$YELLOW"
+    print_message "[[ Removing packages ]]" "${YELLOW}${BOLD}"
     TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
     if [[ -n "$TOREMOVE" ]]; then
-        print_message "The following packages will be removed: $TOREMOVE" "$GREEN"
-        read -rp "$(print_message "Do you want to continue? [Y/n] " "$GREEN")" removeresult
+        print_message "* paru -D --asdeps $TOREMOVE" "$GREEN"
+        read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" removeresult
         case "$removeresult" in
             Y | y | "")
                 paru -D --asdeps $TOREMOVE
-                paru --clean --noconfirm
+                paru --clean
                 ;;
             *)
                 return 1
