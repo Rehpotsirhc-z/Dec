@@ -1,4 +1,4 @@
-# Created 2023-04-22 Sat 20:31
+# Created 2023-04-22 Sat 20:50
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
@@ -9,6 +9,7 @@
 - [[#introduction][Introduction]]
   - [[#why-declarative-package-management][Why declarative package management?]]
 - [[#installation][Installation]]
+  - [[#arch-linux][Arch Linux]]
 - [[#dependencies][Dependencies]]
 - [[#usage][Usage]]
   - [[#example-world-file][Example World File]]
@@ -35,6 +36,9 @@ Dec is a declarative package manager for Arch Linux and its derivatives.
 
 * Installation
 To install Dec, simply run =install= by doing ~./install~.
+
+** Arch Linux
+If you are on Arch Linux, Dec is available in the [[https://aur.archlinux.org/packages/dec][AUR]]. Simply clone the repository and then run ~makepkg -si~ or install it using an AUR helper like paru.
 
 * Dependencies
 Here is a list of the programs that Dec depends on:
