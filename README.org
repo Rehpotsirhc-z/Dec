@@ -1,4 +1,4 @@
-# Created 2023-04-22 Sat 19:42
+# Created 2023-04-22 Sat 20:31
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
@@ -37,17 +37,10 @@ Dec is a declarative package manager for Arch Linux and its derivatives.
 To install Dec, simply run =install= by doing ~./install~.
 
 * Dependencies
-Dec mostly depends on common programs that are usually found on a system. Here is a list of the programs that are needed:
+Here is a list of the programs that Dec depends on:
 
 - paru
 - bash
-- tput
-- awk
-- diff
-- read
-- sed
-- sort
-- tr
 
 * Usage
 Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the world file should contain the name of the package. Comments are made with "#".
