@@ -14,7 +14,7 @@ print_message() {
 # MAKE FUNCTION FOR PRINTING HELP MESSAGE
 print_help() {
     print_message "Usage: dec [OPTIONS]"                                "$GREEN"
-    print_message "Declarative package manager for Arch Linux"           "$GREEN"
+    print_message "Declarative package manager for Arch Linux"          "$GREEN"
     print_message ""                                                    "$GREEN"
     print_message "Options:"                                            "$GREEN"
     print_message "  --help                Show this help message"      "$GREEN"
@@ -82,7 +82,7 @@ upgrade() {
 
 install() {
     print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
-    TOINSTALL="$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | awk '/^error/ { print $3 }' | sed -e "s/^.//" -e "s/.$//" | tr "\n" " ")"
+    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') <(paru -Qqe | sort -u) | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
         print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult

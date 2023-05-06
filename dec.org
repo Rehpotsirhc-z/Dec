@@ -103,7 +103,7 @@ This function prints out a help message.
 # MAKE FUNCTION FOR PRINTING HELP MESSAGE
 print_help() {
     print_message "Usage: dec [OPTIONS]"                                "$GREEN"
-    print_message "Declarative package manager for Arch Linux"           "$GREEN"
+    print_message "Declarative package manager for Arch Linux"          "$GREEN"
     print_message ""                                                    "$GREEN"
     print_message "Options:"                                            "$GREEN"
     print_message "  --help                Show this help message"      "$GREEN"
@@ -204,10 +204,12 @@ upgrade() {
 ** Install
 This function will install packages specified in the package list. It first checks for what packages are missing and then prompts the user to install them.
 
+*NOTE:* This time the functions uses ~paru -Qqe~ so that it doesn't try to install packages that are already installed but are dependencies of another package.
+
 #+begin_src sh
 install() {
     print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
-    TOINSTALL="$(paru -Qi $(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') 2>&1 >/dev/null | awk '/^error/ { print $3 }' | sed -e "s/^.//" -e "s/.$//" | tr "\n" " ")"
+    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') <(paru -Qqe | sort -u) | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
         print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult
@@ -227,6 +229,8 @@ install() {
 
 ** Remove
 This function will remove packages that are not specified in the package list. It first checks what packages are installed that are not specified in the list and then prompts the user to remove them.
+
+*NOTE:* This time the function uses ~paru -Qqett~ so that it doesn't try to uninstall packages that are dependencies of another package.
 
 #+begin_src sh
 remove() {
