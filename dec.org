@@ -10,13 +10,14 @@
 - [[#installation][Installation]]
 - [[#dependencies][Dependencies]]
 - [[#usage][Usage]]
-  - [[#example-world-file][Example World File]]
+  - [[#example-package-list][Example Package List]]
+  - [[#example-usage][Example Usage]]
 - [[#license][License]]
 - [[#colors][Colors]]
 - [[#auxiliary-functions][Auxiliary Functions]]
   - [[#printing-messages][Printing Messages]]
   - [[#help-message][Help Message]]
-- [[#paru][Paru]]
+- [[#dependency-checks][Dependency Checks]]
 - [[#cli-arguments][CLI Arguments]]
 - [[#set-package-list][Set Package List]]
 - [[#managing-packages][Managing Packages]]
@@ -44,11 +45,11 @@ Here is a list of the programs that Dec depends on:
 - bash
 
 * Usage
-Dec uses a world file to determine what packages should be installed. The location of the world file can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the world file should contain the name of the package. Comments are made with "#".
+Dec uses a package list to determine what packages should be installed. The location of the package list can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the package list should contain the name of the package. Comments are made with "#".
 
 For example, you can set =DEC_PACKAGELIST= equal to =/etc/packages=. Populate the list with all the packages you want to be installed. Then you can run Dec with ~dec~ and it will upgrade, install, and remove packages until it matches the list.
 
-** Example World File
+** Example Package List
 #+begin_src sh :tangle no
 # Core
 linux
@@ -68,6 +69,32 @@ emacs
 
 # Games
 0ad
+#+end_src
+
+** Example Usage
+#+begin_src sh :tangle no
+export DEC_PACKAGELIST="/etc/packages"
+dec
+#+end_src
+
+You could also do the following to achieve the same result:
+
+#+begin_src sh :tangle no
+dec --packagelist="/etc/packages"
+#+end_src
+
+To only upgrade packages, you can do this (assuming you have set =DEC_PACKAGELIST=):
+
+#+begin_src sh :tangle no
+dec upgrade
+#+end_src
+
+You can also do the same thing but with installing and/or removing packages:
+
+#+begin_src sh :tangle no
+dec install
+dec remove
+dec upgrade remove
 #+end_src
 
 * License
@@ -119,7 +146,7 @@ print_help() {
 }
 #+end_src
 
-* Paru
+* Dependency Checks
 This checks if paru is installed on the system and exits the script with an error message if it is not found.
 
 #+begin_src sh
@@ -143,7 +170,7 @@ You can run more than one operation by doing something like ~dec upgrade install
 
 #+begin_src sh
 # PARSE COMMAND LINE ARGUMENTS
-while [[ $# -gt 0 ]]; do
+while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --help | -h)
             print_help
@@ -171,7 +198,7 @@ done
 #+end_src
 
 * Set Package List
-This section handles the ~--packagelist=~ argument from the [[#cli-arguments][previous]] section. As mentioned before, Dec will first check for the path as an argument, and then it will look for the =DEC_PACKAGELIST= environmental variable if it is provided.
+This section handles the ~--packagelist=~ argument from the [[#cli-arguments][previous]] section. As mentioned before, Dec will first check for the path as an argument, and then it will look for the =DEC_PACKAGELIST= environmental variable if it is not provided.
 
 #+begin_src sh
 # SET PACKAGE LIST IF NOT PROVIDED
@@ -180,7 +207,7 @@ if [[ ! -v PACKAGES ]]; then
         PACKAGES="$DEC_PACKAGELIST"
     else
         print_message "No list of packages specified" "$RED"
-        print_message "You can specify one by using --packagelist or by setting DEC_PACKAGELIST" "$RED"
+        print_message "You can specify one by using --packagelist= or by setting DEC_PACKAGELIST" "$RED"
         exit 1
     fi
 fi

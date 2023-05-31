@@ -36,7 +36,7 @@ if ! command -v paru &>/dev/null; then
 fi
 
 # PARSE COMMAND LINE ARGUMENTS
-while [[ $# -gt 0 ]]; do
+while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --help | -h)
             print_help
@@ -68,7 +68,7 @@ if [[ ! -v PACKAGES ]]; then
         PACKAGES="$DEC_PACKAGELIST"
     else
         print_message "No list of packages specified" "$RED"
-        print_message "You can specify one by using --packagelist or by setting DEC_PACKAGELIST" "$RED"
+        print_message "You can specify one by using --packagelist= or by setting DEC_PACKAGELIST" "$RED"
         exit 1
     fi
 fi
