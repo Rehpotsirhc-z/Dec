@@ -1,10 +1,9 @@
-# Created 2023-05-30 Tue 23:10
+# Created 2023-12-06 Wed 22:15
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle dec :shebang "#!/bin/bash"
 #+export_file_name: README
 #+auto_tangle: t
-
 * Table of Contents :toc:
 - [[#introduction][Introduction]]
   - [[#why-declarative-package-management][Why declarative package management?]]
@@ -26,30 +25,24 @@
   - [[#install][Install]]
   - [[#remove][Remove]]
 - [[#main][Main]]
-
 * Introduction
 Dec is a declarative package manager for Arch Linux and its derivatives.
-
 ** Why declarative package management?
 1. You want to install your packages onto a different system. You can just copy over your package list (e.g. =/etc/packages=) and then run ~dec~.
 2. You want to keep your system minimal. With declarative package management, you won't forget to uninstall unused packages.
-
 * Installation
 To install Dec, simply run =install= by doing ~./install~.
 
 Dec is also available in the [[https://aur.archlinux.org/packages/dec][AUR]]. Simply clone the repository and then run ~makepkg -si~, or install it using an AUR helper like paru.
-
 * Dependencies
 Here is a list of the programs that Dec depends on:
 
 - paru
 - bash
-
 * Usage
 Dec uses a package list to determine what packages should be installed. The location of the package list can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the package list should contain the name of the package. Comments are made with "#".
 
 For example, you can set =DEC_PACKAGELIST= equal to =/etc/packages=. Populate the list with all the packages you want to be installed. Then you can run Dec with ~dec~ and it will upgrade, install, and remove packages until it matches the list.
-
 ** Example Package List
 #+begin_src sh
 # Core
@@ -71,7 +64,6 @@ emacs
 # Games
 0ad
 #+end_src
-
 ** Example Usage
 #+begin_src sh
 export DEC_PACKAGELIST="/etc/packages"
@@ -97,10 +89,8 @@ dec install
 dec remove
 dec upgrade remove
 #+end_src
-
 * License
 GNU GPLv3
-
 * Colors
 This section sets some colors that will be used when printing messages.
 
@@ -112,7 +102,6 @@ YELLOW="$(tput setaf 3)"
 BOLD="$(tput bold)"
 RESET="$(tput sgr0)"
 #+end_src
-
 * Auxiliary Functions
 ** Printing Messages
 This function prints out text to the user. It takes in two arguments: the message to be printed and the color of the message. If no color is specified, it will print without color.
@@ -123,7 +112,6 @@ print_message() {
     printf '%s%s%s\n' "$2" "$1" "$RESET"
 }
 #+end_src
-
 ** Help Message
 This function prints out a help message.
 
@@ -146,7 +134,6 @@ print_help() {
     print_message "  dec remove --packagelist=packages.txt"             "$GREEN"
 }
 #+end_src
-
 * Dependency Checks
 This checks if paru is installed on the system and exits the script with an error message if it is not found.
 
@@ -157,7 +144,6 @@ if ! command -v paru &>/dev/null; then
     exit 1
 fi
 #+end_src
-
 * CLI Arguments
 This parses the command line arguments. You can give Dec the following arguments:
 
@@ -197,7 +183,6 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 #+end_src
-
 * Set Package List
 This section handles the ~--packagelist=~ argument from the [[#cli-arguments][previous]] section. As mentioned before, Dec will first check for the path as an argument, and then it will look for the =DEC_PACKAGELIST= environmental variable if it is not provided.
 
@@ -213,10 +198,8 @@ if [[ ! -v PACKAGES ]]; then
     fi
 fi
 #+end_src
-
 * Managing Packages
 This section will create the functions that allow Dec to upgrade, install, and remove packages.
-
 ** Upgrade
 This function will upgrade packages on the system. It checks for which packages can be upgraded and then prompts the user to upgrade them.
 
@@ -228,7 +211,6 @@ upgrade() {
     paru -Syu
 }
 #+end_src
-
 ** Install
 This function will install packages specified in the package list. It first checks for what packages are missing and then prompts the user to install them.
 
@@ -237,7 +219,7 @@ This function will install packages specified in the package list. It first chec
 #+begin_src sh
 install() {
     print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
-    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') <(paru -Qqe | sort -u) | tr "\n" " ")"
+    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') <(paru -Qqe | sort -u) | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
         print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult
@@ -254,7 +236,6 @@ install() {
     fi
 }
 #+end_src
-
 ** Remove
 This function will remove packages that are not specified in the package list. It first checks what packages are installed that are not specified in the list and then prompts the user to remove them.
 
@@ -263,7 +244,7 @@ This function will remove packages that are not specified in the package list. I
 #+begin_src sh
 remove() {
     print_message "[[ Removing packages ]]" "${YELLOW}${BOLD}"
-    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
+    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') | tr "\n" " ")"
     if [[ -n "$TOREMOVE" ]]; then
         print_message "* paru -D --asdeps $TOREMOVE" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" removeresult
@@ -281,7 +262,6 @@ remove() {
     fi
 }
 #+end_src
-
 * Main
 This is the main part of the program where it handles how the arguments are dealt with. It first upgrades the system if it is specified. Then it installs missing packages if it is specified. Lastly, it will remove packages that are not in the package list if the user specifies. If no arguments are provided, it will run all of them.
 

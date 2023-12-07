@@ -82,7 +82,7 @@ upgrade() {
 
 install() {
     print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
-    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') <(paru -Qqe | sort -u) | tr "\n" " ")"
+    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') <(paru -Qqe | sort -u) | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
         print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult
@@ -101,7 +101,7 @@ install() {
 
 remove() {
     print_message "[[ Removing packages ]]" "${YELLOW}${BOLD}"
-    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
+    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') | tr "\n" " ")"
     if [[ -n "$TOREMOVE" ]]; then
         print_message "* paru -D --asdeps $TOREMOVE" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" removeresult

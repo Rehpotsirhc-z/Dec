@@ -236,7 +236,7 @@ This function will install packages specified in the package list. It first chec
 #+begin_src sh
 install() {
     print_message "[[ Installing packages ]]" "${YELLOW}${BOLD}"
-    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') <(paru -Qqe | sort -u) | tr "\n" " ")"
+    TOINSTALL="$(diff --new-line-format="" --unchanged-line-format="" <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') <(paru -Qqe | sort -u) | tr "\n" " ")"
     if [[ -n "$TOINSTALL" ]]; then
         print_message "* paru -S --asexplicit $TOINSTALL" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" installresult
@@ -262,7 +262,7 @@ This function will remove packages that are not specified in the package list. I
 #+begin_src sh
 remove() {
     print_message "[[ Removing packages ]]" "${YELLOW}${BOLD}"
-    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d') | tr "\n" " ")"
+    TOREMOVE="$(diff --new-line-format="" --unchanged-line-format="" <(paru -Qqett | sort -u) <(sort -u "$PACKAGES" | sed -e 's/#.*//g' -e '/^$/d' -e 's/^[[:blank:]]*//' -e 's/[[:blank:]]*$//') | tr "\n" " ")"
     if [[ -n "$TOREMOVE" ]]; then
         print_message "* paru -D --asdeps $TOREMOVE" "$GREEN"
         read -rp "$(print_message "About to run above command. Continue? [Y/n] " "$GREEN")" removeresult
