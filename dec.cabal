@@ -1,0 +1,34 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           dec
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/dec#readme>
+author:         Christopher
+maintainer:     Christopher
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.org
+
+executable dec
+  main-is: Main.hs
+  other-modules:
+      Paths_dec
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      ansi-terminal
+    , base >=4.7 && <5
+    , containers
+    , directory
+    , filepath
+    , process
+    , string-qq
+    , text
+  default-language: Haskell2010
