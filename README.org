@@ -1,4 +1,4 @@
-# Created 2024-03-04 Mon 18:01
+# Created 2024-03-04 Mon 18:13
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle "app/Main.hs" :comments link :mkdirp yes
@@ -7,6 +7,7 @@
 - [[#introduction][Introduction]]
   - [[#why-declarative-package-management][Why declarative package management?]]
 - [[#installation][Installation]]
+  - [[#arch-linux][Arch Linux]]
 - [[#dependencies][Dependencies]]
 - [[#usage][Usage]]
   - [[#example-package-list][Example Package List]]
@@ -31,14 +32,21 @@ Dec is a declarative package manager for Arch Linux and its derivatives.
 ** Why declarative package management?
 1. You want to install your packages onto a different system. You can just copy over your package list (e.g. =/etc/packages=) and then run ~dec~.
 2. You want to keep your system minimal. With declarative package management, you won't forget to uninstall unused packages.
-* TODO Installation
-To install Dec, simply run =install= by doing ~./install~.
+* Installation
+The easiest way to build Dec is to use [[https://docs.haskellstack.org/en/stable/install_and_upgrade/][Stack]]:
 
-Dec is also available in the [[https://aur.archlinux.org/packages/dec][AUR]]. Simply clone the repository and then run ~makepkg -si~, or install it using an AUR helper like paru.
-* TODO Dependencies
-Here is a list of the programs that Dec depends on:
+After you have installed Stack, use the following command to compile from source:
 
-- paru
+#+begin_src sh :tangle no
+stack setup
+stack install
+#+end_src sh
+
+~stack setup~ will automatically download the GHC compiler if you don't have it. ~stack install~ will install the Dec executable into =~/.local/bin=, which you should add to your =PATH=.
+** TODO Arch Linux
+If you are on Arch Linux, you can find Dec in the [[https://aur.archlinux.org/packages/dec][AUR]]. Simply clone the repository and then run ~makepkg -si~, or install it using an AUR helper like paru.
+* Dependencies
+The only dependency that is required for Dec to run is paru. However, you will need Stack to build Dec.
 * Usage
 Dec uses a package list to determine what packages should be installed. The location of the package list can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the package list should contain the name of the package. Comments are made with "#".
 
@@ -230,7 +238,7 @@ Examples:
   dec --packagelist=packages.txt install
   dec remove --packagelist=packages.txt|]
 #+end_src
-* TODO Arguments
+* Arguments
 This parses the command line arguments. You can give Dec the following arguments:
 
 - ~-h~ or ~--help~ will print a help message and exit
