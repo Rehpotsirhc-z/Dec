@@ -5,8 +5,8 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           dec
-version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/dec#readme>
+version:        0.2.0.0
+description:    Please see the README on GitLab at https://gitlab.com/rehposuite/dec
 author:         Christopher
 maintainer:     Christopher
 license:        GPL-3
