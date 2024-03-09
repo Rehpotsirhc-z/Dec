@@ -1,4 +1,4 @@
-# Created 2024-03-04 Mon 18:13
+# Created 2024-03-08 Fri 20:11
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle "app/Main.hs" :comments link :mkdirp yes
@@ -299,17 +299,17 @@ install packageList = do
   let packages = filter (not . null) $ map removeComments packageListContents
   systemPackages <- lines <$> readProcess "paru" ["-Qqe"] []
         -- `catchIOError` paruPackageError
-  let toInstall = unwords $ nub $ packages \\ systemPackages
+  let toInstall = nub $ packages \\ systemPackages
 
   printHeading "[[ Installing Packages ]]"
   if null toInstall
     then printInfo "No packages need to be installed"
     else do
-      printInfo $ "* paru -S --asexplicit " ++ toInstall
+      printInfo $ "* paru -S --asexplicit " ++ unwords toInstall
       printPrompt "About to run above command. Continue? [Y/n] "
       hFlush stdout
       userInput <- promptUser
-      when userInput $ callProcess "paru" ["-S", "--asexplicit", toInstall] `catchIOError` paruError
+      when userInput $ callProcess "paru" (["-S", "--asexplicit"] ++ toInstall) `catchIOError` paruError
 #+end_src
 ** Remove
 This function will remove packages that are not specified in the package list. It first checks what packages are installed that are not specified in the list and then prompts the user to remove them.
@@ -323,18 +323,18 @@ remove packageList = do
   let packages = filter (not . null) $ map removeComments packageListContents
   systemPackages <- lines <$> readProcess "paru" ["-Qqett"] []
         -- `catchIOError` paruPackageError
-  let toRemove = unwords $ nub $ systemPackages \\ packages
+  let toRemove = nub $ systemPackages \\ packages
 
   printHeading "[[ Removing Packages ]]"
   if null toRemove
     then printInfo "No packages need to be removed"
     else do
-      printInfo $ "* paru -D --asdeps " ++ toRemove
+      printInfo $ "* paru -D --asdeps " ++ unwords toRemove
       printPrompt "About to run above command. Continue? [Y/n] "
       hFlush stdout
       userInput <- promptUser
       when userInput $ do
-        callProcess "paru" ["-D", "--asdeps", toRemove] `catchIOError` paruError
+        callProcess "paru" (["-D", "--asdeps"] ++ toRemove) `catchIOError` paruError
         callProcess "paru" ["--clean"] `catchIOError` paruError
 #+end_src
 * TODO Catching Errors
