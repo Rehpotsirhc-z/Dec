@@ -181,9 +181,7 @@ This function gives the user a Yes/No prompt, with Yes being the default.
 
 #+begin_src haskell
 promptUser :: IO Bool
-promptUser = do
-  a <- getChar
-  return $ a `elem` ['Y', 'y', '\n']
+promptUser = fmap (`elem` ["Y", "y", ""]) getLine
 #+end_src
 
 ** Remove Comments

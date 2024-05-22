@@ -54,9 +54,7 @@ getPackageList args =
 
 -- [[file:../dec.org::*Prompt User][Prompt User:1]]
 promptUser :: IO Bool
-promptUser = do
-  a <- getChar
-  return $ a `elem` ['Y', 'y', '\n']
+promptUser = fmap (`elem` ["Y", "y", ""]) getLine
 -- Prompt User:1 ends here
 
 -- [[file:../dec.org::*Remove Comments][Remove Comments:1]]
