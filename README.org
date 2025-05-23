@@ -1,9 +1,8 @@
-# Created 2024-05-22 Wed 17:17
+# Created 2025-05-22 Thu 20:46
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle "app/Main.hs" :comments link :mkdirp yes
 #+export_file_name: README
-
 * Table of Contents :toc:
 - [[#introduction][Introduction]]
   - [[#why-declarative-package-management][Why declarative package management?]]
@@ -28,14 +27,11 @@
   - [[#install][Install]]
   - [[#remove][Remove]]
 - [[#catching-errors][Catching Errors]]
-
 * Introduction
 Dec is a declarative package manager for Arch Linux and its derivatives.
-
 ** Why declarative package management?
 1. You want to install your packages onto a different system. You can just copy over your package list (e.g. =/etc/packages=) and then run ~dec~.
 2. You want to keep your system minimal. With declarative package management, you won't forget to uninstall unused packages.
-
 * Installation
 The easiest way to build Dec is to use [[https://docs.haskellstack.org/en/stable/install_and_upgrade/][Stack]]:
 
@@ -47,20 +43,16 @@ stack install
 #+end_src sh
 
 ~stack setup~ will automatically download the GHC compiler if you don't have it. ~stack install~ will install the Dec executable into =~/.local/bin=, which you should add to your =PATH=.
-
-** TODO Arch Linux
-If you are on Arch Linux, you can find Dec in the [[https://aur.archlinux.org/packages/dec][AUR]]. Simply clone the repository and then run ~makepkg -si~, or install it using an AUR helper like paru.
-
+** Arch Linux
+If you are on Arch Linux, you can find Dec in the [[https://aur.archlinux.org/packages/dec-bin][AUR]]. Simply clone the repository and then run ~makepkg -si~, or install it using an AUR helper like paru.
 * Dependencies
 The only dependency that is required for Dec to run is paru. However, you will need Stack to build Dec.
-
 * Usage
 Dec uses a package list to determine what packages should be installed. The location of the package list can be configured using the =DEC_PACKAGELIST= environmental variable or by using ~--packagelist~. Each line in the package list should contain the name of the package. Comments are made with "#".
 
 For example, you can set =DEC_PACKAGELIST= equal to =/etc/packages=. Populate the list with all the packages you want to be installed. Then you can run Dec with ~dec~ and it will upgrade, install, and remove packages until it matches the list.
-
 ** Example Package List
-#+begin_src sh
+#+begin_src sh :tangle no
 # Core
 linux
 linux-headers
@@ -80,52 +72,54 @@ emacs
 # Games
 0ad
 #+end_src
-
 ** Example Usage
-#+begin_src sh
+#+begin_src sh :tangle no
 export DEC_PACKAGELIST="/etc/packages"
 dec
 #+end_src
 
 You could also do the following to achieve the same result:
 
-#+begin_src sh
+#+begin_src sh :tangle no
 dec --packagelist="/etc/packages"
 #+end_src
 
 To only upgrade packages, you can do this (assuming you have set =DEC_PACKAGELIST=):
 
-#+begin_src sh
+#+begin_src sh :tangle no
 dec upgrade
 #+end_src
 
 You can also do the same thing but with installing and/or removing packages:
 
-#+begin_src sh
+#+begin_src sh :tangle no
 dec install
 dec remove
 dec upgrade remove
 #+end_src
-
 * License
 GNU GPLv3
-
 * Imports
 This section imports some modules and sets language pragmas.
 
 #+begin_src haskell
 {-# LANGUAGE QuasiQuotes #-}
 
--- TODO colors are more bright than before
--- TODO Add the invalid argument
--- TODO Slow nub
-
 module Main (main) where
 
 import Control.Applicative (Alternative ((<|>)))
 import Control.Monad (unless, when)
-import Data.List (isInfixOf, nub, stripPrefix, (\\))
+import Data.Foldable (for_)
+import Data.List
+  ( intercalate,
+    isInfixOf,
+    isPrefixOf,
+    stripPrefix,
+  )
+import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NE
 import Data.Maybe (fromMaybe, isJust)
+import qualified Data.Set as Set
 import Data.String.QQ (s)
 import qualified Data.Text as T
 import System.Console.ANSI
@@ -143,7 +137,6 @@ import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError)
 import System.Process (callProcess, readProcess)
 #+end_src
-
 * Main
 This section checks if paru is installed, gets the arguments passed into the program, and passes them into ~handleArgs~.
 
@@ -156,7 +149,6 @@ main = do
     exitFailure
   handleArgs =<< getArgs
 #+end_src
-
 * Auxiliary Functions
 ** Paru Dependency Check
 This function checks if paru is installed on the system.
@@ -165,18 +157,16 @@ This function checks if paru is installed on the system.
 checkParu :: IO Bool
 checkParu = fmap isJust (findExecutable "paru")
 #+end_src
-
 ** Parse Arguments
 This function parses the ~--packagelist=~ argument.
 
 #+begin_src haskell
-getPackageList :: [[Char]] -> Maybe [Char]
+getPackageList :: [String] -> Maybe String
 getPackageList args =
   case filter ("--packagelist=" `isInfixOf`) args of
     [result] -> Just result
     _moreThanOneOrNone -> Nothing
 #+end_src
-
 ** Prompt User
 This function gives the user a Yes/No prompt, with Yes being the default.
 
@@ -184,7 +174,6 @@ This function gives the user a Yes/No prompt, with Yes being the default.
 promptUser :: IO Bool
 promptUser = fmap (`elem` ["Y", "y", ""]) getLine
 #+end_src
-
 ** Remove Comments
 This function removes comments (~#~) from the input lines, along with any other whitespace.
 
@@ -195,10 +184,8 @@ removeComments line =
       trimmed = T.unpack $ T.strip $ T.pack noComment
    in trimmed
 #+end_src
-
 ** Printing Messages
 This section defines functions that print different types of messages to the user. These types include Errors, Headings, Information, Prompts, and a Help message.
-
 *** Errors
 #+begin_src haskell
 printError :: String -> IO ()
@@ -208,7 +195,6 @@ printError str =
       ++ str
       ++ setSGRCode [Reset]
 #+end_src
-
 *** Headings
 #+begin_src haskell
 printHeading :: String -> IO ()
@@ -218,7 +204,6 @@ printHeading str =
       ++ str
       ++ setSGRCode [Reset]
 #+end_src
-
 *** Information
 #+begin_src haskell
 printInfo :: String -> IO ()
@@ -228,7 +213,6 @@ printInfo str =
       ++ str
       ++ setSGRCode [Reset]
 #+end_src
-
 *** Prompts
 #+begin_src haskell
 printPrompt :: String -> IO ()
@@ -238,11 +222,12 @@ printPrompt str =
       ++ str
       ++ setSGRCode [Reset]
 #+end_src
-
 *** Help
 #+begin_src haskell
 printHelp :: IO ()
-printHelp = printInfo [s|
+printHelp =
+  printInfo
+    [s|
 Usage: dec [OPTIONS]
 Declarative package manager for Arch Linux
 
@@ -258,7 +243,6 @@ Examples:
   dec --packagelist=packages.txt install
   dec remove --packagelist=packages.txt|]
 #+end_src
-
 * Arguments
 This parses the command line arguments. You can give Dec the following arguments:
 
@@ -271,9 +255,29 @@ This parses the command line arguments. You can give Dec the following arguments
 You can run more than one operation by doing something like ~dec upgrade install~ or ~dec remove~. If neither ~upgrade~, ~install~, or ~remove~ are set, Dec will assume that you want to run all of them. If you do not want to pass in ~--packagelist=~, you can also set the =DEC_PACKAGELIST= environmental variable. However, the argument passed in has a higher precedent than the variable.
 
 #+begin_src haskell
-handleArgs :: [[Char]] -> IO ()
+handleArgs :: [String] -> IO ()
 handleArgs args = do
   when ("--help" `elem` args || "-h" `elem` args) $ printHelp >> exitSuccess
+
+  let validCommands = ["upgrade", "install", "remove"]
+  let validFlags = ["--help", "-h"]
+  let isFlag arg = arg `elem` validFlags
+  let isCommand arg = arg `elem` validCommands
+
+  let invalidArgs = filter (\arg -> not (isFlag arg || isCommand arg || "--packagelist=" `isPrefixOf` arg)) args
+
+  for_ (NE.nonEmpty invalidArgs) $ \invalidNE -> do
+    let formattedArgs = fmap (\x -> "`" ++ x ++ "`") invalidNE
+    let errorMsg = case formattedArgs of
+          x :| [] -> "Invalid argument: " ++ x
+          x :| [y] -> "Invalid arguments: " ++ x ++ " and " ++ y
+          neArgs ->
+            let initArgs = NE.init neArgs
+                lastArg = NE.last neArgs
+             in "Invalid arguments: " ++ intercalate ", " initArgs ++ ", and " ++ lastArg
+    printError errorMsg
+    printHelp
+    exitFailure
 
   let doUpgrade = "upgrade" `elem` args
   let doInstall = "install" `elem` args
@@ -296,10 +300,8 @@ handleArgs args = do
     (doUpgrade || doInstall || doRemove)
     (upgrade >> install packageList >> remove packageList)
 #+end_src
-
 * Package Functions
 This section creates the functions that allow Dec to upgrade, install, and remove packages.
-
 ** Upgrade
 This function will upgrade packages on the system. It checks for which packages can be upgraded and then prompts the user to upgrade them.
 
@@ -310,7 +312,6 @@ upgrade = do
   printInfo "* paru -Syu"
   callProcess "paru" ["-Syu"] `catchIOError` paruError
 #+end_src
-
 ** Install
 This function will install packages specified in the package list. It first checks for what packages are missing and then prompts the user to install them.
 
@@ -319,23 +320,24 @@ This function will install packages specified in the package list. It first chec
 #+begin_src haskell
 install :: FilePath -> IO ()
 install packageList = do
-  packageListContents <- fmap lines (readFile packageList) `catchIOError` readPackageListError
-  let packages = filter (not . null) $ map removeComments packageListContents
-  systemPackages <- lines <$> readProcess "paru" ["-Qqe"] []
-        -- `catchIOError` paruPackageError
-  let toInstall = nub $ packages \\ systemPackages
+  packageListContents <- fmap (Set.fromList . lines) (readFile packageList) `catchIOError` readPackageListError
+  let packages = Set.filter (not . null) $ Set.map removeComments packageListContents
+  systemPackages <-
+    Set.fromList . lines
+      <$> readProcess "paru" ["-Qqe"] []
+        `catchIOError` paruPackageError
+  let toInstall = Set.difference packages systemPackages
 
   printHeading "[[ Installing Packages ]]"
-  if null toInstall
+  if Set.null toInstall
     then printInfo "No packages need to be installed"
     else do
-      printInfo $ "* paru -S --asexplicit " ++ unwords toInstall
+      printInfo $ "* paru -S --asexplicit " ++ unwords (Set.toList toInstall)
       printPrompt "About to run above command. Continue? [Y/n] "
       hFlush stdout
       userInput <- promptUser
-      when userInput $ callProcess "paru" (["-S", "--asexplicit"] ++ toInstall) `catchIOError` paruError
+      when userInput $ callProcess "paru" (["-S", "--asexplicit"] ++ Set.toList toInstall) `catchIOError` paruError
 #+end_src
-
 ** Remove
 This function will remove packages that are not specified in the package list. It first checks what packages are installed that are not specified in the list and then prompts the user to remove them.
 
@@ -344,34 +346,35 @@ This function will remove packages that are not specified in the package list. I
 #+begin_src haskell
 remove :: FilePath -> IO ()
 remove packageList = do
-  packageListContents <- fmap lines (readFile packageList) `catchIOError` readPackageListError
-  let packages = filter (not . null) $ map removeComments packageListContents
-  systemPackages <- lines <$> readProcess "paru" ["-Qqett"] []
-        -- `catchIOError` paruPackageError
-  let toRemove = nub $ systemPackages \\ packages
+  packageListContents <- fmap (Set.fromList . lines) (readFile packageList) `catchIOError` readPackageListError
+  let packages = Set.filter (not . null) $ Set.map removeComments packageListContents
+  systemPackages <-
+    Set.fromList . lines
+      <$> readProcess "paru" ["-Qqett"] []
+        `catchIOError` paruPackageError
+  let toRemove = Set.difference systemPackages packages
 
   printHeading "[[ Removing Packages ]]"
-  if null toRemove
+  if Set.null toRemove
     then printInfo "No packages need to be removed"
     else do
-      printInfo $ "* paru -D --asdeps " ++ unwords toRemove
+      printInfo $ "* paru -D --asdeps " ++ unwords (Set.toList toRemove)
       printPrompt "About to run above command. Continue? [Y/n] "
       hFlush stdout
       userInput <- promptUser
       when userInput $ do
-        callProcess "paru" (["-D", "--asdeps"] ++ toRemove) `catchIOError` paruError
+        callProcess "paru" (["-D", "--asdeps"] ++ Set.toList toRemove) `catchIOError` paruError
         callProcess "paru" ["--clean"] `catchIOError` paruError
 #+end_src
-
-* TODO Catching Errors
+* Catching Errors
 This section declares how to handle various errors that could occur.
 
 #+begin_src haskell
-paruError :: Monad m => p -> m ()
+paruError :: (Monad m) => p -> m ()
 paruError _ = return () -- Left blank since it could be user decline
 
--- TODO
--- paruPackageError _ = printError "Error running paru" >> exitFailure
+paruPackageError :: p -> IO b
+paruPackageError _ = printError "Error running paru to query installed package list" >> exitFailure
 
 readPackageListError :: p -> IO b
 readPackageListError _ = printError "Could not read package list" >> exitFailure
