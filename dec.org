@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Rehpotsirhc
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle "app/Main.hs" :comments link :mkdirp yes
@@ -107,7 +111,13 @@ dec upgrade remove
 #+end_src
 
 * License
-GNU GPLv3
+This program uses GPL-3.0-or-later.
+
+#+begin_src haskell
+-- SPDX-FileCopyrightText: 2025 Rehpotsirhc
+--
+-- SPDX-License-Identifier: GPL-3.0-or-later
+#+end_src
 
 * Imports
 This section imports some modules and sets language pragmas.

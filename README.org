@@ -1,4 +1,4 @@
-# Created 2025-05-22 Thu 20:46
+# Created 2025-05-23 Fri 11:25
 #+title: Dec
 #+author: Christopher
 #+property: header-args :tangle "app/Main.hs" :comments link :mkdirp yes
@@ -98,7 +98,13 @@ dec remove
 dec upgrade remove
 #+end_src
 * License
-GNU GPLv3
+This program uses GPL-3.0-or-later.
+
+#+begin_src haskell
+-- SPDX-FileCopyrightText: 2025 Rehpotsirhc
+--
+-- SPDX-License-Identifier: GPL-3.0-or-later
+#+end_src
 * Imports
 This section imports some modules and sets language pragmas.
 

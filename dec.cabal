@@ -10,7 +10,6 @@ description:    Please see the README on GitLab at https://gitlab.com/rehposuite
 author:         Christopher
 maintainer:     Christopher
 license:        GPL-3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.org
