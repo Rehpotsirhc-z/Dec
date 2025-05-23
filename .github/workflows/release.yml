@@ -1,0 +1,60 @@
+# SPDX-FileCopyrightText: 2025 Rehpotsirhc
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger on tags starting with 'v'
+
+env:
+  BIN_NAME: dec
+  BIN_DIR: bin/
+  ARCH: x86_64
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: "latest"
+          # enable-cabal: true
+          # cabal-version: '3.10'
+
+      - name: Build
+        run: |
+          stack build --arch $ARCH --pedantic --copy-bins --local-bin-path "$BIN_DIR"
+          # cabal build
+          # cabal install --installdir="$BIN_DIR"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "Version: ${VERSION}"
+
+      - name: Create archive
+        run: |
+          mkdir -p release
+          tar czvf "release/${BIN_NAME}-${VERSION}-${ARCH}.tar.gz" -C "${BIN_DIR}" "${BIN_NAME}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ env.VERSION }}
+          body: "Automated release for ${{ env.BIN_NAME }} v${{ env.VERSION }}"
+          files: |
+            release/${{ env.BIN_NAME }}-${{ env.VERSION }}-${{ env.ARCH }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
